@@ -1,0 +1,17 @@
+{
+  "name": "CRB-language",
+  "version": "1.0.0",
+  "description": "Create CRB programming language on JS",
+  "main": "index.js",
+  "keywords": [],
+  "author": "Artem Gusev <gusev2014russia@mail.ru> (CreativeRusBear)",
+  "license": "ISC",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/CreativeRusBear/CRB-language.git"
+  },
+  "bugs": {
+    "url": "https://github.com/CreativeRusBear/CRB-language/issues"
+  },
+  "homepage": "https://github.com/CreativeRusBear/CRB-language#readme"
+}
