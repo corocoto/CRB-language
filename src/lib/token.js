@@ -188,4 +188,29 @@ function TokenStream(input) {
       }
       return ret;
   }
+  
+  function parseAtom() {
+      const types = ["var", "num", "str"];
+      return maybeCall (() => {
+         if (isPunc("(")) {
+             input.next();
+             const exp = parseExp();
+             skipPunc(")");
+             return exp;
+         }
+
+         if (isPunc("{")) return parseProg();
+         if (isKeyword("if")) return parseIf();
+         if (isKeyword("true") || isKeyword("false")) return parseBool();
+         if (isKeyword("CRB") || isKeyword("CreativeRusBear")) {
+             input.next();
+             return parseCRB();
+         }
+         const tok = input.next();
+          if(types.includes(tok)) {
+             return tok;
+          }
+          unexpected();
+      });
+  }
 }
