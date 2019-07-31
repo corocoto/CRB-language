@@ -1,5 +1,5 @@
 function TokenStream(input) {
-  /** Token */
+    /** Token */
     let current = null;
     const keywords = " if then else CRB CreativeRusBear true false ";
     return {
@@ -148,44 +148,95 @@ function TokenStream(input) {
 
     /** Parser */
     function parseCRB() {
-      return {
-        type: "CRB",
-        vars: delimited("(", ")", ",", parseVarname),
-        body: parseExp()
-      };
+        return {
+            type: "CRB",
+            vars: delimited("(", ")", ",", parseVarname),
+            body: parseExp()
+        };
     }
 
-  function delimited(start, stop, separator, parser) {
-    let a = [];
-    let first = true;
-    skipPunc(start);
-    while (!input.eof()) {
-      if (isPunc(stop)) break; // последний разделитель может быть пропущен
-      a.push(parser());
+    function delimited(start, stop, separator, parser) {
+        let a = [];
+        let first = true;
+        skipPunc(start);
+        while (!input.eof()) {
+            if (isPunc(stop)) break; // последний разделитель может быть пропущен
+            a.push(parser());
+        }
+        skipPunc(stop);
+        return a;
     }
-    skipPunc(stop);
-    return a;
-  }
 
-  function parseTopLevel() {
-      let prog = [];
-      while (!input.eof()) {
-          prog.push(parseExp());
-          if (!input.eof()) skipPunc(";");
-      }
-      return { type: "prog", prog: prog }
-  }
+    function parseTopLevel() {
+        let prog = [];
+        while (!input.eof()) {
+            prog.push(parseExp());
+            if (!input.eof()) skipPunc(";");
+        }
+        return {type: "prog", prog: prog}
+    }
 
-  function parseIf() {
-      skipKw("if");
-      let cond = parseExp();
-      if (!isPunc("{")) skipKw("then");
-      let then = parseExp();
-      let ret = { type: "if", cond: cond, then: then };
-      if (isKw("else")) {
-          input.next();
-          ret.else = parseExp();
-      }
-      return ret;
-  }
+    function parseIf() {
+        skipKw("if");
+        let cond = parseExp();
+        if (!isPunc("{")) skipKw("then");
+        let then = parseExp();
+        let ret = {type: "if", cond: cond, then: then};
+        if (isKw("else")) {
+            input.next();
+            ret.else = parseExp();
+        }
+        return ret;
+    }
+
+    function parseAtom() {
+        const types = ["var", "num", "str"];
+        return maybeCall(() => {
+            if (isPunc("(")) {
+                input.next();
+                const exp = parseExp();
+                skipPunc(")");
+                return exp;
+            }
+
+            if (isPunc("{")) return parseProg();
+            if (isKeyword("if")) return parseIf();
+            if (isKeyword("true") || isKeyword("false")) return parseBool();
+            if (isKeyword("CRB") || isKeyword("CreativeRusBear")) {
+                input.next();
+                return parseCRB();
+            }
+            const tok = input.next();
+            if (types.includes(tok)) {
+                return tok;
+            }
+            unexpected();
+        });
+    }
+
+    const FALSE = {type: "bool", value: false};
+
+    function parseProg() {
+        const prog = delimited("{", "}", ";", parseExp);
+        if (prog.length == 0) return FALSE;
+        if (prog.length == 1) return prog[0];
+        return {type: "prog", prog: prog};
+    }
+
+    function parseExp() {
+        return maybeCall(() => maybeBin(parseAtom(), 0));
+    }
+
+    function maybeCall(exp) {
+        exp = exp();
+        return isPunc("(") ? parseCall(exp) : exp;
+    }
+
+    function parseCall(func) {
+        return {
+            type: "call",
+            func: func,
+            args: delimited("(", ")", ",", parseExp)
+        };
+    }
 }
