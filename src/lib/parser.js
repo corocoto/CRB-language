@@ -1,15 +1,48 @@
 /** Parser */
 const FALSE = {type: "bool", value: false};
+
 function Parse(input) {
     const PRECEDENCE = {
-        "=" : 1,
-        "||" : 2,
-        "&&" : 3,
-        "<" : 7, ">" : 7, "<=" : 7, ">=" : 7, "==" : 7, "!=" : 7,
-        "+" : 10, "-" : 10,
-        "*" : 20, "/" : 20, "%" : 20
+        "=": 1,
+        "||": 2,
+        "&&": 3,
+        "<": 7, ">": 7, "<=": 7, ">=": 7, "==": 7, "!=": 7,
+        "+": 10, "-": 10,
+        "*": 20, "/": 20, "%": 20
     };
     return parseTopLevel();
+
+    function isPunc(char) {
+        const tok = input.peek();
+        return tok && tok.type === "punc" && (!char || tok.value === char) && tok;
+    }
+
+    function isKw(char) {
+        const tok = input.peek();
+        return tok && tok.type === "kw" && (!char || tok.value === char) && tok;
+    }
+
+    function isOp(char) {
+        const tok = input.peek();
+        return tok && tok.type === "op" && (!char || tok.value === char) && tok;
+    }
+
+    function skipPunc(char) {
+        (isPunc(char)) ? input.next() : input.croak(`Expecting punctuation: ${char}`);
+    }
+
+    function skipKw(char) {
+        (isKw(char)) ? input.next() : input.croak(`Expecting keyword: ${char}`);
+    }
+
+    function skipOp(char) {
+        (isOp(char)) ? input.next() : input.croak(`Expecting operator: ${char}`);
+    }
+
+    function unexpected() {
+        input.croak(`Unexpected token: ${JSON.stringify(input.peek())}`);
+    }
+
     function parseCRB() {
         return {
             type: "CRB",
@@ -24,6 +57,8 @@ function Parse(input) {
         skipPunc(start);
         while (!input.eof()) {
             if (isPunc(stop)) break; // последний разделитель может быть пропущен
+            (first) ? first = false : skipPunc(separator);
+            if (isPunc(stop)) break;
             a.push(parser());
         }
         skipPunc(stop);
@@ -53,8 +88,8 @@ function Parse(input) {
     }
 
     function parseAtom() {
-        const types = ["var", "num", "str"];
         return maybeCall(() => {
+
             if (isPunc("(")) {
                 input.next();
                 const exp = parseExp();
@@ -63,12 +98,13 @@ function Parse(input) {
             }
 
             if (isPunc("{")) return parseProg();
-            if (isKeyword("if")) return parseIf();
-            if (isKeyword("true") || isKeyword("false")) return parseBool();
-            if (isKeyword("CRB") || isKeyword("CreativeRusBear")) {
+            if (isKw("if")) return parseIf();
+            if (isKw("true") || isKw("false")) return parseBool();
+            if (isKw("CRB") || isKw("CreativeRusBear")) {
                 input.next();
                 return parseCRB();
             }
+            const types = ["var", "num", "str"];
             const tok = input.next();
             if (types.includes(tok)) {
                 return tok;
@@ -108,17 +144,25 @@ function Parse(input) {
             const hisPrec = PRECEDENCE[tok.value];
             if (hisPrec > myPrec) {
                 input.next();
-                const right = maybeBin(parseAtom(), hisPrec);
-                const bin = {
-                    type : tok.value === "=" ? "assign" : "binary",
-                    operator : tok.value,
-                    left : left,
+                return maybeBin({
+                    type: tok.value === "=" ? "assign" : "binary",
+                    operator: tok.value,
+                    left: left,
                     right: right
-                };
-                return maybeBin(bin, myPrec);
+                }, myPrec);
             }
         }
         return left;
+    }
+
+    function parseVarname() {
+        const name = input.next();
+        if (name.type !== "var") input.croak("Expecting variable name");
+        return name.value;
+    }
+
+    function parseBool() {
+        return {type: "bool", value: input.next().value === "true"};
     }
 }
 
