@@ -1,5 +1,5 @@
 function evaluate(exp, env) {
-    switch (Exp.type) {
+    switch (exp.type) {
         case "num"    :
         case "bool"   :
         case "str"    :
@@ -47,8 +47,8 @@ function applyOp(op, a, b) {
         case "+"  : return num(a) + num(b);
         case "-"  : return num(a) - num(b);
         case "*"  : return num(a) * num(b);
-        case "/"  : return num(a) / num(b);
-        case "%"  : return num(a) % num(b);
+        case "/"  : return num(a) / div(b);
+        case "%"  : return num(a) % div(b);
         case "&&" : return a !== false && b !== false;
         case "||" : return (a !== false || b !== false);
         case "<"  : return num(a) < num(b);
@@ -62,6 +62,10 @@ function applyOp(op, a, b) {
 }
 
 function makeCRB(env, exp) {
+    if (exp.name) {
+        env = env.extend();
+        env.def(exp.name, CRB);
+    }
     function CRB() {
         const names = exp.vars;
         const scope = env.extend();

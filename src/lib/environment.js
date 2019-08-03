@@ -1,7 +1,7 @@
 /** Environment */
 function Environment(parent) {
     this.vars = Object.create(parent ? parent.vars : null);
-    this.parent = parent
+    this.parent = parent;
 }
 
 Environment.prototype = {
@@ -25,9 +25,7 @@ Environment.prototype = {
             throw new Error(`Undefined variable ${name}`);
         return (scope || this).vars[name] = value;
     },
-    def : (name, value) =>{
-        return this.vars[name] = value
-    }
+    def : (name, value) => this.vars[name] = value
 };
 
 module.exports = Environment;

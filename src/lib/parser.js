@@ -16,17 +16,17 @@ function Parse(input) {
 
     function isPunc(char) {
         const tok = input.peek();
-        return tok && tok.type === "punc" && (!char || tok.value === char) && tok;
+        return tok && tok.type == "punc" && (!char || tok.value == char) && tok;
     }
 
     function isKw(char) {
         const tok = input.peek();
-        return tok && tok.type === "kw" && (!char || tok.value === char) && tok;
+        return tok && tok.type == "kw" && (!char || tok.value == char) && tok;
     }
 
     function isOp(char) {
         const tok = input.peek();
-        return tok && tok.type === "op" && (!char || tok.value === char) && tok;
+        return tok && tok.type == "op" && (!char || tok.value == char) && tok;
     }
 
 
@@ -50,6 +50,7 @@ function Parse(input) {
     function parseCRB() {
         return {
             type: "CRB",
+            name: input.peek().type === "var" ? input.next().value : null,
             vars: delimited("(", ")", ",", parseVarname),
             body: parseExp()
         };
@@ -66,10 +67,10 @@ function Parse(input) {
 
     function parseIf() {
         skipKw("if");
-        let cond = parseExp();
+        const cond = parseExp();
         if (!isPunc("{")) skipKw("then");
-        let then = parseExp();
-        let ret = {type: "if", cond: cond, then: then};
+        const then = parseExp();
+        const ret = {type: "if", cond, then};
         if (isKw("else")) {
             input.next();
             ret.else = parseExp();
@@ -96,9 +97,8 @@ function Parse(input) {
             }
             const types = ["var", "num", "str"];
             const tok = input.next();
-            if (types.includes(tok.type)) {
+            if (types.includes(tok.type))
                 return tok;
-            }
             unexpected();
         });
     }
@@ -107,17 +107,18 @@ function Parse(input) {
         const prog = delimited("{", "}", ";", parseExp);
         if (prog.length == 0) return FALSE;
         if (prog.length == 1) return prog[0];
-        return {type: "prog", prog: prog};
+        return {type: "prog", prog};
     }
 
     function parseExp() {
         return maybeCall(() => maybeBin(parseAtom(), 0));
+        ///
     }
 
     function parseCall(func) {
         return {
             type: "call",
-            func: func,
+            func,
             args: delimited("(", ")", ",", parseExp)
         };
     }
@@ -136,7 +137,7 @@ function Parse(input) {
 
 
     function delimited(start, stop, separator, parser) {
-        let a = [];
+        const a = [];
         let first = true;
         skipPunc(start);
         while (!input.eof()) {

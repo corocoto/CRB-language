@@ -109,12 +109,8 @@ function TokenStream(input) {
     }
 
     function eof() {
-        return peek() == "";
+        return peek() == null;
     }
-
-    // function croak(msg) {
-    //   throw new Error(`${msg} (at line ${line} on ${col})`);
-    // }
 
     function readNext() {
         readWhile(isWhitespace);
