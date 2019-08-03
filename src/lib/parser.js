@@ -12,6 +12,8 @@ function Parse(input) {
     };
     return parseTopLevel();
 
+
+
     function isPunc(char) {
         const tok = input.peek();
         return tok && tok.type === "punc" && (!char || tok.value === char) && tok;
@@ -27,6 +29,9 @@ function Parse(input) {
         return tok && tok.type === "op" && (!char || tok.value === char) && tok;
     }
 
+
+
+
     function skipPunc(char) {
         (isPunc(char)) ? input.next() : input.croak(`Expecting punctuation: ${char}`);
     }
@@ -39,9 +44,8 @@ function Parse(input) {
         (isOp(char)) ? input.next() : input.croak(`Expecting operator: ${char}`);
     }
 
-    function unexpected() {
-        input.croak(`Unexpected token: ${JSON.stringify(input.peek())}`);
-    }
+
+
 
     function parseCRB() {
         return {
@@ -49,20 +53,6 @@ function Parse(input) {
             vars: delimited("(", ")", ",", parseVarname),
             body: parseExp()
         };
-    }
-
-    function delimited(start, stop, separator, parser) {
-        let a = [];
-        let first = true;
-        skipPunc(start);
-        while (!input.eof()) {
-            if (isPunc(stop)) break; // последний разделитель может быть пропущен
-            (first) ? first = false : skipPunc(separator);
-            if (isPunc(stop)) break;
-            a.push(parser());
-        }
-        skipPunc(stop);
-        return a;
     }
 
     function parseTopLevel() {
@@ -113,7 +103,6 @@ function Parse(input) {
         });
     }
 
-
     function parseProg() {
         const prog = delimited("{", "}", ";", parseExp);
         if (prog.length == 0) return FALSE;
@@ -125,17 +114,48 @@ function Parse(input) {
         return maybeCall(() => maybeBin(parseAtom(), 0));
     }
 
-    function maybeCall(exp) {
-        exp = exp();
-        return isPunc("(") ? parseCall(exp) : exp;
-    }
-
     function parseCall(func) {
         return {
             type: "call",
             func: func,
             args: delimited("(", ")", ",", parseExp)
         };
+    }
+
+    function parseVarname() {
+        const name = input.next();
+        if (name.type !== "var") input.croak("Expecting variable name");
+        return name.value;
+    }
+
+    function parseBool() {
+        return {type: "bool", value: input.next().value === "true"};
+    }
+
+
+
+
+    function delimited(start, stop, separator, parser) {
+        let a = [];
+        let first = true;
+        skipPunc(start);
+        while (!input.eof()) {
+            if (isPunc(stop)) break; // последний разделитель может быть пропущен
+            (first) ? first = false : skipPunc(separator);
+            if (isPunc(stop)) break;
+            a.push(parser());
+        }
+        skipPunc(stop);
+        return a;
+    }
+
+    function unexpected() {
+        input.croak(`Unexpected token: ${JSON.stringify(input.peek())}`);
+    }
+
+    function maybeCall(exp) {
+        exp = exp();
+        return isPunc("(") ? parseCall(exp) : exp;
     }
 
     function maybeBin(left, myPrec) {
@@ -153,16 +173,6 @@ function Parse(input) {
             }
         }
         return left;
-    }
-
-    function parseVarname() {
-        const name = input.next();
-        if (name.type !== "var") input.croak("Expecting variable name");
-        return name.value;
-    }
-
-    function parseBool() {
-        return {type: "bool", value: input.next().value === "true"};
     }
 }
 
