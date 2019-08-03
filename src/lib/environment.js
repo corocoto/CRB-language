@@ -20,7 +20,6 @@ Environment.prototype = {
          return (!scope && this.parent) ? throw new Error(`Undefined variable ${name}`) : (scope || this).vars[name] = value;
     },
     def : (name, value) => this.vars[name] = value
-
 };
 
 module.exports = Environment;
