@@ -12,9 +12,9 @@ function InputStream(input) {
     };
 
     function next() {
-        const ch = input.charAt(pos++);
-        if (ch == "\n") line++, col = 0; else col++;
-        return ch;
+        const char = input.charAt(pos++);
+        if (char == "\n") line++, col = 0; else col++;
+        return char;
     }
 
     function peek() {
@@ -27,7 +27,7 @@ function InputStream(input) {
 
     function croak(msg) {
           throw new Error(`${msg} (at line ${line} on ${col})`);
-        }
+    }
 }
 
 module.exports = InputStream;

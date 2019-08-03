@@ -56,12 +56,12 @@ function Parse(input) {
     }
 
     function parseTopLevel() {
-        let prog = [];
+        const prog = [];
         while (!input.eof()) {
             prog.push(parseExp());
             if (!input.eof()) skipPunc(";");
         }
-        return {type: "prog", prog: prog}
+        return { type: "prog", prog: prog }
     }
 
     function parseIf() {
@@ -96,7 +96,7 @@ function Parse(input) {
             }
             const types = ["var", "num", "str"];
             const tok = input.next();
-            if (types.includes(tok)) {
+            if (types.includes(tok.type)) {
                 return tok;
             }
             unexpected();
@@ -168,7 +168,7 @@ function Parse(input) {
                     type: tok.value === "=" ? "assign" : "binary",
                     operator: tok.value,
                     left: left,
-                    right: right
+                    right: maybeBin(parseAtom(), hisPrec)
                 }, myPrec);
             }
         }

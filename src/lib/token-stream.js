@@ -99,13 +99,13 @@ function TokenStream(input) {
 
 
     function next() {
-        const char = input.charAt(pos++);
-        if (char == "\n") line++, col = 0; else col++;
-        return char;
+        const tok = current;
+        current = null;
+        return tok || readNext();
     }
 
     function peek() {
-        return input.charAt(pos);
+        return current || (current = readNext());
     }
 
     function eof() {

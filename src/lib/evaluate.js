@@ -7,7 +7,9 @@ function evaluate(exp, env) {
         case "var"    :
             return env.get(exp.value);
         case "assign" :
-            return (exp.left.type !== "var") ? throw new Error(`Cannot assign to ${JSON.stringify(exp.left)}`) : env.set(exp.left.value, evaluate(exp.right, env));
+            if (exp.left.type !== "var")
+                throw new Error(`Cannot assign to ${JSON.stringify(exp.left)}`);
+            return env.set(exp.left.value, evaluate(exp.right, env));
         case "binary" :
             return applyOp(exp.operator, evaluate(exp.left, env), evaluate(exp.right, env));
         case "CRB"    :
@@ -30,11 +32,15 @@ function evaluate(exp, env) {
 
 function applyOp(op, a, b) {
     function num(sym) {
-        return (typeof sym !== "number") ? throw new Error(`Expected number but got ${sym}`) : sym;
+        if (typeof sym !== "number")
+            throw new Error(`Expected number but got ${sym}`);
+        return sym;
     }
 
     function div(sym) {
-        return (num(sym) === 0) ? throw new Error("Divide by zero") : x;
+        if (num(sym) === 0)
+            throw new Error("Divide by zero");
+        return x;
     }
 
     switch (op) {
