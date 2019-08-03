@@ -12,9 +12,10 @@ I present to you the programming language CRB-language, written in JavaScript.
 * `CreativeRusBear` - also keyword used to create function;
 * `if` - conditional operator if;
     * `then` - if conditional operator return true, then write this keyword;
-    * `else` - if conditional operator return false, then write this keyword;
+    * `else` - if conditional operator return false, then write this keyword.
 
 ***A few words about the features of this programming language***
+
 You can also write code without curly braces and the keywords 'then' or 'else'. In this case, I note that this is a lot of similarity with the JavaScript programming language. This also applies to functions.
 
 ### Examples:
