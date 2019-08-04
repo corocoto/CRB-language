@@ -1,7 +1,7 @@
 /** Token */
 function TokenStream(input) {
     let current = null;
-    const keywords = " if then else CRB CreativeRusBear true false ";
+    const keywords = " let if then else CRB CreativeRusBear true false ";
 
     return {
         next,

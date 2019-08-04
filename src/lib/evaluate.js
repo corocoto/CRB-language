@@ -25,6 +25,13 @@ function evaluate(exp, env) {
         case "call" :
             const func = evaluate(exp.func, env);
             return func.apply(null, exp.args.map(arg => evaluate(arg, env)));
+        case "let" :
+            exp.vars.forEach(v => {
+               const scope = env.extend();
+               scope.def(v.name, v.def ? evaluate(v.def, env) : false);
+               env = scope;
+            });
+            return evaluate(exp.body, env);
         default:
             throw new Error(`I don't know how to evaluate ${exp.type}`);
     }
