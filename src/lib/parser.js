@@ -46,6 +46,38 @@ function Parse(input) {
 
 
 
+    function parseLet() {
+        skipKw("let");
+        if (input.peek().type === "var") {
+            const name = input.next().value;
+            const defs = delimited("(", ")", ",", parseVardef);
+            return {
+                type : "call",
+                func : {
+                    type : "CRB",
+                    name,
+                    vars : defs.map(def => def.name),
+                    body : parseExp()
+                },
+                args : defs.map(def => def.def || FALSE)
+            };
+        }
+        return  {
+            type : "let",
+            vars : delimited("(", ")", ",", parseVardef),
+            body : parseExp()
+        };
+    }
+
+    function parseVardef() {
+        const name = parseVarname();
+        let def;
+        if (isOp("=")) {
+            input.next();
+            def = parseExp();
+        }
+        return { name, def };
+    }
 
     function parseCRB() {
         return {
@@ -88,6 +120,7 @@ function Parse(input) {
                 return exp;
             }
 
+            if (isKw("let")) return parseLet();
             if (isPunc("{")) return parseProg();
             if (isKw("if")) return parseIf();
             if (isKw("true") || isKw("false")) return parseBool();

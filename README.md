@@ -7,6 +7,7 @@ I present to you the programming language CRB-language, written in JavaScript.
 ### Syntax
 
 ***Keywords:***
+* `let` - used to create loops, add new variables;
 * `#` - comment;
 * `CRB` - keyword used to create function;
 * `CreativeRusBear` - also keyword used to create function;
@@ -16,8 +17,13 @@ I present to you the programming language CRB-language, written in JavaScript.
 
 ***A few words about the features of this programming language***
 
-You can also write code without curly braces and the keywords 'then' or 'else'. In this case, I note that this is a lot of similarity with the JavaScript programming language. This also applies to functions.
+You can also write code without curly braces and the keywords `then` or `else`. In this case, I note that this is a lot of similarity with the JavaScript programming language. This also applies to functions.
 
+You can also create multiple variables and loops using the `let` keyword. But you can also create it without using `let`. 
+
+A choice of creating features is also provided. You can create both anonymous and named functions.
+
+P.S. All possible usage examples are in the corresponding section.
 ### Examples:
 1. 
 ```
@@ -85,4 +91,23 @@ set-cdr!(x, 20);
 println(car(x)); # 10
 println(cdr(x)); # 20
 ```
-
+6.
+```
+let (x = 2, y = 3, z = x + y) print(x + y + z);
+```
+7.
+```
+print(let loop (n = 10)
+        if n > 0 then n + loop(n - 1)
+                 else 0);
+```
+8.
+ ```
+# create a named function 'loop'
+print(
+    (CRB loop (n) if n > 0 
+        then n + loop(n - 1)
+         else 0)
+    (10)
+);
+```
