@@ -1,5 +1,5 @@
 # CRB-language (CreativeRusBear-language)
-
+![GitHub repo size](https://img.shields.io/github/repo-size/CreativeRusBear/CRB-language) ![GitHub top language](https://img.shields.io/github/languages/top/CreativeRusBear/CRB-language)
 ### Description
 
 I present to you the programming language CRB-language, written in JavaScript.
