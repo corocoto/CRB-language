@@ -111,3 +111,21 @@ print(
     (10)
 );
 ```
+9.
+```
+copyFile = CRB(source, dest) {
+  writeFile(dest, readFile(source));
+};
+copyFile("test.txt", "foo.txt"); 
+```
+10.
+```
+# work with return keyword
+foo = with-return(CRB(return){
+  println("foo");
+  return("DONE");
+  println("bar");
+});
+
+foo();
+```
