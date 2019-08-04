@@ -1,37 +1,87 @@
-function evaluate(exp, env) {
+function evaluate(exp, env, callback) {
+    GUARD(evaluate, arguments);
     switch (exp.type) {
         case "num"    :
         case "bool"   :
         case "str"    :
-            return exp.value;
+            callback(exp.value);
+            return;
         case "var"    :
-            return env.get(exp.value);
+            callback(env.get(exp.value));
+            return;
         case "assign" :
             if (exp.left.type !== "var")
                 throw new Error(`Cannot assign to ${JSON.stringify(exp.left)}`);
-            return env.set(exp.left.value, evaluate(exp.right, env));
-        case "binary" :
-            return applyOp(exp.operator, evaluate(exp.left, env), evaluate(exp.right, env));
-        case "CRB"    :
-            return makeCRB(env, exp);
-        case "if"     :
-            const cond = evaluate(exp.cond, env);
-            if (cond !== false) return evaluate(exp.then, env);
-            return exp.else ? evaluate(exp.else, env) : false;
-        case "prog"   :
-            let val = false;
-            exp.prog.forEach(exp => val = evaluate(exp, env));
-            return val;
-        case "call" :
-            const func = evaluate(exp.func, env);
-            return func.apply(null, exp.args.map(arg => evaluate(arg, env)));
-        case "let" :
-            exp.vars.forEach(v => {
-               const scope = env.extend();
-               scope.def(v.name, v.def ? evaluate(v.def, env) : false);
-               env = scope;
+            evaluate(exp.right, env, function CC (right){
+                GUARD(CC, arguments);
+                callback(env.set(exp.left.value, right));
             });
-            return evaluate(exp.body, env);
+            return;
+        case "binary" :
+            evaluate(exp.left, env, function CC (left) {
+                GUARD(CC, arguments);
+                evaluate(exp.right, env, function CC (right) {
+                    GUARD(CC, arguments);
+                    callback(applyOp(exp.operator, left, right));
+                });
+            });
+            return;
+        case "CRB"    :
+            callback(makeCRB(env, exp));
+            return;
+        case "if"     :
+            evaluate(exp.cond, env, function CC (cond) {
+                GUARD(CC, arguments);
+                (cond !== false)
+                    ? evaluate(exp.then, env, callback)
+                    : ((exp.else) ? evaluate(exp.else, env, callback) : callback(false));
+            });
+            return;
+        case "prog"   :
+            (function loop(last, i) {
+                GUARD(loop, arguments);
+                (i < exp.prog.length)
+                    ? evaluate(exp.prog[i], env, function CC (val) {
+                        GUARD(CC, arguments);
+                        loop(val, i + 1);
+                    })
+                    : callback(last);
+            }) (false,0);
+            return;
+        case "call" :
+            evaluate(exp.func, env, function CC (func) {
+                GUARD(CC, arguments);
+                (function loop(args, i) {
+                    GUARD(loop, arguments);
+                    (i < exp.args.length) ? evaluate(exp.args[i], env, function CC (arg){
+                        GUARD(CC, arguments);
+                        args[i + 1] = arg;
+                        loop(args, i + 1);
+                    }) : func.apply(null, args);
+                }) ([ callback ], 0)
+            });
+            return;
+        case "let" :
+            (function loop(env, i) {
+                GUARD(loop, arguments);
+                if (i < exp.vars.length){
+                    const v = exp.vars[i];
+                    if (v.def) evaluate(v.def, env, function CC (value) {
+                        GUARD(CC, arguments);
+                        const scope = env.extend();
+                        scope.def(v.name, value);
+                        loop(scope, i + 1);
+                    });
+                    else {
+                        const scope = env.extend();
+                        scope.def(v.name, false);
+                        loop(scope, i + 1);
+                    }
+                } else {
+                     evaluate(exp.body, env, callback);
+                }
+            }) (env, 0);
+            return;
         default:
             throw new Error(`I don't know how to evaluate ${exp.type}`);
     }
@@ -73,15 +123,41 @@ function makeCRB(env, exp) {
         env = env.extend();
         env.def(exp.name, CRB);
     }
-    function CRB() {
+    function CRB(callback) {
+        GUARD(CRB, arguments);
         const names = exp.vars;
         const scope = env.extend();
         for (let i = 0; i < names.length; ++i) {
-            scope.def(names[i], i < arguments.length ? arguments[i] : false);
+            scope.def(names[i], i + 1 < arguments.length ? arguments[i + 1] : false);
         }
-        return evaluate(exp.body, scope);
+        evaluate(exp.body, scope, callback);
+        return CRB;
     }
     return CRB;
 }
 
-module.exports = evaluate;
+
+/** CPS interpreter*/
+let STACKLEN;
+function GUARD (f, args) {
+    if (--STACKLEN < 0) throw new Continuation (f, args);
+}
+
+function Continuation (f, args) {
+    this.f = f;
+    this.args =args;
+}
+
+function Execute (f, args) {
+    while (true)
+        try {
+            STACKLEN = 200;
+            return f.apply(null, args);
+        } catch (ex) {
+            if (ex instanceof Continuation)
+                f = ex.f, args = ex.args;
+            else throw ex;
+        }
+}
+
+module.exports = {Execute, evaluate};
